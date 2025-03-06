@@ -9,6 +9,7 @@ pub mod server_hello;
 pub mod extensions;
 pub mod encrypted_extensions;
 pub mod certificate;
+pub mod certificate_verify;
 pub mod finished;
 
 // Re-export main types from child modules
@@ -16,6 +17,7 @@ pub use client_hello::ClientHello;
 pub use server_hello::ServerHello;
 pub use encrypted_extensions::EncryptedExtensions;
 pub use certificate::Certificate;
+pub use certificate_verify::CertificateVerify;
 pub use finished::Finished;
 pub use extensions::{Extension, ExtensionType};
 pub use extensions::key_share::{KeyShareEntry, NamedGroup};
@@ -161,6 +163,9 @@ impl HandshakeLayer {
             },
             HandshakeType::Certificate => {
                 Box::new(certificate::Certificate::parse(message_data, &mut msg_pos)?)
+            },
+            HandshakeType::CertificateVerify => {
+                Box::new(certificate_verify::CertificateVerify::parse(message_data, &mut msg_pos)?)
             },
             HandshakeType::Finished => {
                 Box::new(finished::Finished::parse(message_data, &mut msg_pos)?)

@@ -40,7 +40,13 @@ impl StateHandler for ClientState {
                 Ok(())
             },
             (ConnectionState::Handshaking, HandshakeType::CertificateVerify) => {
-                // Process certificate verify
+                // Process certificate verify message
+                // In a real implementation, we would:
+                // 1. Verify the signature using the public key from the certificate
+                // 2. Check that the signature was created over the correct transcript hash
+                // 3. Validate that the signature algorithm is acceptable
+                
+                // For now, we just transition the state in the same way
                 Ok(())
             },
             (ConnectionState::Handshaking, HandshakeType::Finished) => {
