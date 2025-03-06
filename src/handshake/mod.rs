@@ -7,14 +7,16 @@ use std::convert::TryFrom;
 pub mod client_hello;
 pub mod server_hello;
 pub mod extensions;
-// These will be implemented in future PRs
-// pub mod encrypted_extensions;
-// pub mod certificate;
-// pub mod finished;
+pub mod encrypted_extensions;
+pub mod certificate;
+pub mod finished;
 
 // Re-export main types from child modules
 pub use client_hello::ClientHello;
 pub use server_hello::ServerHello;
+pub use encrypted_extensions::EncryptedExtensions;
+pub use certificate::Certificate;
+pub use finished::Finished;
 pub use extensions::{Extension, ExtensionType};
 pub use extensions::key_share::{KeyShareEntry, NamedGroup};
 
@@ -153,6 +155,15 @@ impl HandshakeLayer {
             },
             HandshakeType::ServerHello => {
                 Box::new(server_hello::ServerHello::parse(message_data, &mut msg_pos)?)
+            },
+            HandshakeType::EncryptedExtensions => {
+                Box::new(encrypted_extensions::EncryptedExtensions::parse(message_data, &mut msg_pos)?)
+            },
+            HandshakeType::Certificate => {
+                Box::new(certificate::Certificate::parse(message_data, &mut msg_pos)?)
+            },
+            HandshakeType::Finished => {
+                Box::new(finished::Finished::parse(message_data, &mut msg_pos)?)
             },
             _ => return Err(Error::NotImplemented(
                 format!("Parsing handshake message type {:?} not yet implemented", header.msg_type)

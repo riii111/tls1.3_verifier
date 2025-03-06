@@ -5,6 +5,9 @@ pub mod certificate;
 pub mod state;
 pub mod error;
 pub mod utils;
+pub mod tls;
+pub mod alert;
+pub mod session;
 
 pub use error::{Error, Result};
 
