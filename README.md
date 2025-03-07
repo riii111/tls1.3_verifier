@@ -141,9 +141,63 @@ cargo build
 
 # Run tests
 cargo test
+```
 
-# Try the examples
+### Setting Up Test Certificates
+
+For certificate validation tests, you need to generate test certificates. Run the following commands:
+
+```bash
+# Create a directory for test certificates
+mkdir -p tests/test_data/certificates
+
+# Create a self-signed CA certificate
+openssl req -x509 -newkey rsa:2048 -keyout tests/test_data/certificates/test-key.pem \
+    -out tests/test_data/certificates/test-ca.pem -days 365 -nodes \
+    -subj "/CN=Test CA"
+
+# Create a config file for the leaf certificate
+cat > tests/test_data/certificates/leaf.cnf << EOL
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+CN = example.com
+
+[v3_req]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = example.com
+DNS.2 = www.example.com
+EOL
+
+# Create a leaf certificate signing request
+openssl req -new -newkey rsa:2048 -nodes \
+    -keyout tests/test_data/certificates/leaf-key.pem \
+    -out tests/test_data/certificates/leaf.csr \
+    -config tests/test_data/certificates/leaf.cnf
+
+# Sign the certificate with the CA
+openssl x509 -req -in tests/test_data/certificates/leaf.csr \
+    -CA tests/test_data/certificates/test-ca.pem \
+    -CAkey tests/test_data/certificates/test-key.pem \
+    -CAcreateserial -out tests/test_data/certificates/leaf.pem \
+    -days 365 -extensions v3_req \
+    -extfile tests/test_data/certificates/leaf.cnf
+```
+
+### Running Examples
+
+```bash
+# Verify a TLS 1.3 handshake
 cargo run --example verify_tls13_handshake -- /path/to/ca.pem /path/to/capture.bin example.com
+
+# Verify a certificate
 cargo run --example certificate_verification -- /path/to/ca.pem /path/to/server.pem example.com
 ```
 

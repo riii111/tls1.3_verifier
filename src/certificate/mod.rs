@@ -126,7 +126,8 @@ impl CertificateVerifier {
         Ok(validation::ValidationStatus::Valid)
     }
     
-    fn check_hostname(&self, cert: &ParsedCertificate, hostname: &str) -> bool {
+    // Made public for testing
+    pub fn check_hostname(&self, cert: &ParsedCertificate, hostname: &str) -> bool {
         for san in &cert.subject_alt_names {
             if let Some(name) = san.strip_prefix("DNS:") {
                 if name == hostname {
