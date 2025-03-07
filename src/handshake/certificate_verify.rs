@@ -48,10 +48,14 @@ impl CertificateVerify {
         Ok(Self { algorithm, signature })
     }
     
-    pub fn verify(&self, _transcript_hash: &[u8], _public_key: &[u8]) -> Result<()> {
-        // This will be implemented as part of the crypto operations phase
-        // For now, we'll just return an error indicating it's not implemented
-        Err(Error::NotImplemented("CertificateVerify signature verification".to_string()))
+    pub fn verify(&self, transcript_hash: &[u8], public_key: &[u8], is_server: bool) -> Result<()> {
+        crate::crypto::signature::verify_certificate_verify(
+            self.algorithm,
+            public_key,
+            &self.signature,
+            transcript_hash,
+            is_server
+        )
     }
 }
 

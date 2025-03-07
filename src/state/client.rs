@@ -40,13 +40,17 @@ impl StateHandler for ClientState {
                 Ok(())
             },
             (ConnectionState::Handshaking, HandshakeType::CertificateVerify) => {
-                // Process certificate verify message
-                // In a real implementation, we would:
-                // 1. Verify the signature using the public key from the certificate
-                // 2. Check that the signature was created over the correct transcript hash
-                // 3. Validate that the signature algorithm is acceptable
+                // In a real implementation, we would extract the public key from the certificate
+                // and verify the signature over the transcript hash up to this point.
+                // Since we don't have full transcript hash tracking yet, we just transition the state.
                 
-                // For now, we just transition the state in the same way
+                // Example of how verification would work with a real message:
+                // if let Some(cert_verify) = message.as_any().downcast_ref::<crate::handshake::CertificateVerify>() {
+                //     let server_public_key = /* from certificate */;
+                //     let transcript_hash = /* computed from all handshake messages */;
+                //     cert_verify.verify(transcript_hash, server_public_key, true)?;
+                // }
+                
                 Ok(())
             },
             (ConnectionState::Handshaking, HandshakeType::Finished) => {
