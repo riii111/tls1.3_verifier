@@ -174,6 +174,7 @@ fn verify_certificate(ca_cert_path: &str, cert_file: &str, hostname: Option<&str
         certificate::ValidationStatus::UnknownIssuer => println!("\n❌ Certificate has an unknown issuer!"),
         certificate::ValidationStatus::PathLengthExceeded => println!("\n❌ Certificate path length constraint exceeded!"),
         certificate::ValidationStatus::UnhandledCriticalExtension => println!("\n❌ Certificate has unhandled critical extensions!"),
+        certificate::ValidationStatus::UnsupportedSignatureAlgorithm => println!("\n❌ Certificate uses an unsupported signature algorithm!"),
     }
     
     Ok(())

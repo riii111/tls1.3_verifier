@@ -74,6 +74,7 @@ fn main() -> Result<()> {
         ValidationStatus::UnknownIssuer => println!("Certificate has an unknown issuer!"),
         ValidationStatus::PathLengthExceeded => println!("Certificate path length constraint exceeded!"),
         ValidationStatus::UnhandledCriticalExtension => println!("Certificate has unhandled critical extensions!"),
+        ValidationStatus::UnsupportedSignatureAlgorithm => println!("Certificate uses an unsupported signature algorithm!"),
     }
 
     Ok(())

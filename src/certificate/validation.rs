@@ -12,6 +12,7 @@ pub enum ValidationStatus {
     UnknownIssuer,
     PathLengthExceeded,
     UnhandledCriticalExtension,
+    UnsupportedSignatureAlgorithm,
 }
 
 pub struct ValidationOptions {
@@ -19,6 +20,7 @@ pub struct ValidationOptions {
     pub time_override: Option<SystemTime>,
     pub max_path_length: u8,
     pub allow_self_signed: bool,
+    pub strict_algorithm_check: bool,
 }
 
 impl Default for ValidationOptions {
@@ -28,6 +30,7 @@ impl Default for ValidationOptions {
             time_override: None,
             max_path_length: 5,
             allow_self_signed: false,
+            strict_algorithm_check: false,
         }
     }
 }
@@ -169,13 +172,22 @@ fn validate_self_signed_certificate(cert: &Certificate, options: &ValidationOpti
     
     // Verify the certificate signature using its own public key
     // For self-signed certificates, the certificate is both the subject and the issuer
-    if let Ok(is_valid) = verify_certificate_signature(parsed, parsed) {
-        if !is_valid {
-            return Ok(ValidationStatus::InvalidSignature);
+    match verify_certificate_signature(parsed, parsed) {
+        Ok(is_valid) => {
+            if !is_valid {
+                return Ok(ValidationStatus::InvalidSignature);
+            }
+        },
+        Err(e) => {
+            // Improve error handling with more specific information
+            log::warn!("Self-signed certificate signature verification failed: {}", e);
+            
+            // For educational purposes, we continue rather than fail outright,
+            // but in a production system, we might want to be more strict
+            if options.strict_algorithm_check {
+                return Ok(ValidationStatus::UnsupportedSignatureAlgorithm);
+            }
         }
-    } else {
-        log::warn!("Certificate signature verification failed due to unsupported algorithm");
-        // For educational purposes, we continue rather than fail outright
     }
     
     if options.check_expiration {
@@ -228,13 +240,27 @@ pub fn validate_certificate(
         
         // Verify the certificate signature using the issuer's public key
         // For non-self-signed certificates, verify against the issuer's public key
-        if let Ok(is_valid) = verify_certificate_signature(parsed, issuer_parsed) {
-            if !is_valid {
-                return Ok(ValidationStatus::InvalidSignature);
+        match verify_certificate_signature(parsed, issuer_parsed) {
+            Ok(is_valid) => {
+                if !is_valid {
+                    return Ok(ValidationStatus::InvalidSignature);
+                }
+            },
+            Err(e) => {
+                // Enhanced error logging with more details
+                log::warn!(
+                    "Certificate signature verification failed for cert '{}' with issuer '{}': {}", 
+                    parsed.subject, 
+                    parsed.issuer, 
+                    e
+                );
+                
+                // For compatibility, we continue rather than fail outright in educational context
+                // But allow for strict mode in production settings
+                if options.strict_algorithm_check {
+                    return Ok(ValidationStatus::UnsupportedSignatureAlgorithm);
+                }
             }
-        } else {
-            log::warn!("Certificate signature verification failed due to unsupported algorithm");
-            // For compatibility, we continue rather than fail outright
         }
     }
     
@@ -245,8 +271,21 @@ pub fn validate_certificate(
 fn get_signature_scheme(algorithm: &str) -> Result<crate::crypto::signature::SignatureScheme> {
     use crate::crypto::signature::SignatureScheme;
     
+    // Map common algorithm OIDs to human-readable names for better error messages
+    let algorithm_name = match algorithm {
+        "1.2.840.113549.1.1.11" => "sha256WithRSAEncryption",
+        "1.2.840.113549.1.1.12" => "sha384WithRSAEncryption",
+        "1.2.840.113549.1.1.13" => "sha512WithRSAEncryption",
+        "1.2.840.10045.4.3.2" => "ecdsa-with-SHA256",
+        "1.2.840.10045.4.3.3" => "ecdsa-with-SHA384",
+        "1.2.840.10045.4.3.4" => "ecdsa-with-SHA512",
+        "1.2.840.113549.1.1.10" => "RSASSA-PSS",
+        "1.3.101.112" => "Ed25519",
+        "1.3.101.113" => "Ed448",
+        _ => algorithm, // If not recognized, use the OID as is
+    };
+    
     // Match OIDs to our signature schemes
-    // This is a simplified mapping and would need to be extended for a complete implementation
     match algorithm {
         "1.2.840.113549.1.1.11" => Ok(SignatureScheme::RsaPkcs1Sha256), // sha256WithRSAEncryption
         "1.2.840.113549.1.1.12" => Ok(SignatureScheme::RsaPkcs1Sha384), // sha384WithRSAEncryption
@@ -255,7 +294,11 @@ fn get_signature_scheme(algorithm: &str) -> Result<crate::crypto::signature::Sig
         "1.2.840.10045.4.3.3" => Ok(SignatureScheme::EcdsaSecp384r1Sha384), // ecdsa-with-SHA384
         "1.2.840.10045.4.3.4" => Ok(SignatureScheme::EcdsaSecp521r1Sha512), // ecdsa-with-SHA512
         // Add more mappings as needed
-        _ => Err(Error::CertificateError(format!("Unsupported signature algorithm: {}", algorithm)))
+        _ => Err(Error::CertificateError(format!(
+            "Unsupported signature algorithm: {} ({})", 
+            algorithm_name, 
+            algorithm
+        )))
     }
 }
 
