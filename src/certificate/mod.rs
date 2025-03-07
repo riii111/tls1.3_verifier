@@ -128,8 +128,7 @@ impl CertificateVerifier {
     
     fn check_hostname(&self, cert: &ParsedCertificate, hostname: &str) -> bool {
         for san in &cert.subject_alt_names {
-            if san.starts_with("DNS:") {
-                let name = &san[4..];
+            if let Some(name) = san.strip_prefix("DNS:") {
                 if name == hostname {
                     return true;
                 }

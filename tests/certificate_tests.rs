@@ -1,5 +1,4 @@
-use tls13_verifier::certificate::{Certificate, CertificateVerifier, ValidationStatus, ValidationOptions};
-use std::path::Path;
+use tls13_verifier::certificate::Certificate;
 
 // These tests would normally use real certificate files
 // For this code, we'll create mock certificates in memory
@@ -11,7 +10,7 @@ fn test_basic_certificate_parsing() {
         0x30, 0x82, 0x01, 0x0A, // ASN.1 SEQUENCE
     ];
     
-    let cert = Certificate::new(mock_cert_der);
+    let _cert = Certificate::new(mock_cert_der);
     
     // TODO: Test with valid certificates once we have test certificates
 }
@@ -46,12 +45,4 @@ fn test_hostname_verification() {
     println!("Skipping hostname verification test until real certificates are available");
 }
 
-// Helper to create a test certificate chain
-fn create_test_certificate_chain() -> Vec<Certificate> {
-    // TODO: Replace with real test certificates when available
-    let leaf = Certificate::new(vec![0x01, 0x02, 0x03]);
-    let intermediate = Certificate::new(vec![0x04, 0x05, 0x06]);
-    let root = Certificate::new(vec![0x07, 0x08, 0x09]);
-    
-    vec![leaf, intermediate, root]
-}
+// Tests will be updated with real certificates in the future

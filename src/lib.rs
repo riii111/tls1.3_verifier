@@ -17,21 +17,13 @@ pub fn init_logging() {
     let _ = env_logger::builder().try_init();
 }
 
+#[derive(Default)]
 pub struct TlsVerifierParams {
     pub server_name: Option<String>,
     pub trusted_certs_path: Option<String>,
     pub allow_self_signed: bool,
 }
 
-impl Default for TlsVerifierParams {
-    fn default() -> Self {
-        Self {
-            server_name: None,
-            trusted_certs_path: None,
-            allow_self_signed: false,
-        }
-    }
-}
 
 pub struct TlsHandshakeVerifier {
     handshake_state: state::HandshakeState,
@@ -49,8 +41,10 @@ impl TlsHandshakeVerifier {
             
             // Set validation options if needed
             if params.allow_self_signed {
-                let mut options = certificate::ValidationOptions::default();
-                options.allow_self_signed = true;
+                let options = certificate::ValidationOptions {
+                    allow_self_signed: true,
+                    ..Default::default()
+                };
                 cert_verifier = cert_verifier.with_validation_options(options);
             }
             
@@ -76,7 +70,7 @@ impl TlsHandshakeVerifier {
         for record in records {
             match record.content_type {
                 record::ContentType::Handshake => {
-                    self.process_handshake_data(&record.fragment)?;
+                    self.process_handshake_data(record.fragment)?;
                 }
                 record::ContentType::Alert => {
                     log::warn!("Received alert: {:?}", record.fragment);

@@ -1,10 +1,10 @@
 use std::env;
 use std::path::Path;
-use tls13_verifier::certificate::{Certificate, CertificateVerifier};
-use tls13_verifier::state::{HandshakeState, ConnectionState};
+use tls13_verifier::certificate::CertificateVerifier;
+use tls13_verifier::state::HandshakeState;
 use tls13_verifier::handshake::{
     ServerHello, EncryptedExtensions, Certificate as HandshakeCertificate,
-    CertificateVerify, Finished, CipherSuite, HandshakeMessage, HandshakeType,
+    CertificateVerify, Finished, CipherSuite,
 };
 use tls13_verifier::handshake::extensions::{Extension, ExtensionType};
 use tls13_verifier::handshake::certificate::CertificateEntry;
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
     handshake_state.process_message(Box::new(certificate))?;
     
     // Mock CertificateVerify
-    let certificate_verify = create_mock_certificate_verify();
+    let _certificate_verify = create_mock_certificate_verify();
     println!("Processing CertificateVerify...");
     // Note: In a real implementation, this would fail without real certificates
     // For the example, we just skip this step

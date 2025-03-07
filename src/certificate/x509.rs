@@ -22,7 +22,7 @@ pub struct ParsedCertificate {
     pub subject_unique_id: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct KeyUsage {
     pub digital_signature: bool,
     pub non_repudiation: bool,
@@ -35,21 +35,6 @@ pub struct KeyUsage {
     pub decipher_only: bool,
 }
 
-impl Default for KeyUsage {
-    fn default() -> Self {
-        Self {
-            digital_signature: false,
-            non_repudiation: false,
-            key_encipherment: false,
-            data_encipherment: false,
-            key_agreement: false,
-            key_cert_sign: false,
-            crl_sign: false,
-            encipher_only: false,
-            decipher_only: false,
-        }
-    }
-}
 
 fn asn1_time_to_system_time(time: &ASN1Time) -> Result<SystemTime> {
     // Convert ASN.1 TIME to SystemTime

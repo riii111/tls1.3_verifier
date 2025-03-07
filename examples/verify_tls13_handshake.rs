@@ -1,6 +1,5 @@
 use tls13_verifier::{TlsHandshakeVerifier, TlsVerifierParams, Result};
 use std::env;
-use std::path::Path;
 use std::fs;
 use std::io::Read;
 

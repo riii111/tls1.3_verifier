@@ -1,6 +1,5 @@
 use std::env;
 use std::io::Read;
-use std::path::Path;
 use tls13_verifier::{TlsHandshakeVerifier, TlsVerifierParams, Result, certificate};
 
 fn main() -> Result<()> {

@@ -116,7 +116,7 @@ impl TranscriptHash {
         };
 
         // Store old messages
-        let old_messages = std::mem::replace(&mut self.messages, Vec::new());
+        let old_messages = std::mem::take(&mut self.messages);
 
         // Update instance
         self.context = new_context;
@@ -171,10 +171,7 @@ impl TranscriptHash {
 
     /// Check if a cipher suite uses SHA-384
     fn is_sha384_suite(&self, suite: crate::handshake::CipherSuite) -> bool {
-        match suite {
-            crate::handshake::CipherSuite::TlsAes256GcmSha384 => true,
-            _ => false,
-        }
+        matches!(suite, crate::handshake::CipherSuite::TlsAes256GcmSha384)
     }
 
     /// Get stored messages for debugging
@@ -193,7 +190,7 @@ impl Default for TranscriptHash {
 mod tests {
     use super::*;
     use crate::handshake::CipherSuite;
-    use crate::handshake::extensions::{Extension, ExtensionType};
+    // No extensions needed for these tests
 
     #[test]
     fn test_transcript_hash_sha256() {

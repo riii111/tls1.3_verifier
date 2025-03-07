@@ -89,8 +89,7 @@ impl TrustStore {
         }
 
         // Check certificate path
-        let mut path_length = 0;
-        for i in 0..chain.len()-1 {
+        for (path_length, i) in (0..chain.len()-1).enumerate() {
             // Validate that cert[i] is issued by cert[i+1]
             let status = validate_certificate(&chain[i], Some(&chain[i+1]), options)?;
             if status != ValidationStatus::Valid {
@@ -98,10 +97,9 @@ impl TrustStore {
             }
 
             // Check path length constraints
-            if path_length > options.max_path_length {
+            if path_length as u8 > options.max_path_length {
                 return Ok(ValidationStatus::PathLengthExceeded);
             }
-            path_length += 1;
         }
 
         // Validate the root against trust anchors
