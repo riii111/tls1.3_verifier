@@ -1,12 +1,12 @@
 use crate::error::{Error, Result};
 use crate::handshake::{CipherSuite, HandshakeMessage, HandshakeType};
+use crate::handshake::server_hello::ServerHello;
 use crate::certificate::{Certificate, CertificateVerifier, ValidationStatus};
 use crate::handshake::certificate_verify::CertificateVerify;
 use crate::handshake::certificate::Certificate as HandshakeCertificate;
 use crate::handshake::finished::Finished;
 use crate::crypto::TranscriptHash;
 use crate::crypto::signature::SignatureScheme;
-use std::any::Any;
 use super::{StateHandler, ConnectionState};
 
 pub struct ClientState {

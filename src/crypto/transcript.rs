@@ -1,8 +1,8 @@
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::handshake::{HandshakeMessage, HandshakeType};
 use crate::handshake::client_hello::ClientHello;
 use crate::handshake::server_hello::ServerHello;
-use ring::digest::{Context, SHA256, SHA384, Digest};
+use ring::digest::{Context, SHA256, SHA384};
 use std::fmt;
 
 /// The transcript hash maintains the running hash of all handshake messages

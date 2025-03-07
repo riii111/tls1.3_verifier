@@ -1,6 +1,5 @@
 use crate::error::{Error, Result};
 use super::{Certificate, ParsedCertificate};
-use crate::crypto::signature;
 use std::time::SystemTime;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -233,7 +232,7 @@ pub fn validate_certificate(
 }
 
 // Placeholder for actual signature verification
-fn verify_certificate_signature(cert: &ParsedCertificate, issuer: &ParsedCertificate) -> Result<bool> {
+fn verify_certificate_signature(_cert: &ParsedCertificate, _issuer: &ParsedCertificate) -> Result<bool> {
     // This is a simplified implementation
     // In a real TLS 1.3 verifier, we would:
     // 1. Extract the signature algorithm from the certificate
