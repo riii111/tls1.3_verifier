@@ -31,4 +31,8 @@ impl HandshakeMessage for Finished {
     fn serialize(&self) -> Result<Vec<u8>> {
         Ok(self.verify_data.clone())
     }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }

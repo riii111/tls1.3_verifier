@@ -26,6 +26,7 @@ impl TryFrom<u8> for ContentType {
 #[derive(Debug, Clone)]
 pub struct TlsRecord<'a> {
     pub record_type: ContentType,
+    pub content_type: ContentType, // Alias for record_type for clarity
     pub legacy_version: u16,
     pub fragment: &'a [u8],
 }
@@ -69,11 +70,34 @@ impl RecordLayer {
         Ok((
             TlsRecord {
                 record_type,
+                content_type: record_type, // Set both fields to the same value
                 legacy_version,
                 fragment,
             },
             pos
         ))
+    }
+    
+    pub fn process_records<'a>(&self, data: &'a [u8]) -> Result<Vec<TlsRecord<'a>>> {
+        let mut records = Vec::new();
+        let mut pos = 0;
+        
+        while pos < data.len() {
+            match self.parse_record(&data[pos..]) {
+                Ok((record, consumed)) => {
+                    records.push(record);
+                    pos += consumed;
+                }
+                Err(Error::ParseError(e)) if e == "Record too short" && pos > 0 => {
+                    // If we've successfully parsed at least one record and 
+                    // we have a partial record at the end, we're done
+                    break;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        
+        Ok(records)
     }
 
     pub fn serialize_record(&self, record: &TlsRecord<'_>) -> Result<Vec<u8>> {
@@ -137,6 +161,7 @@ mod tests {
         let fragment = [0x01, 0x02, 0x03, 0x04, 0x05];
         let record = TlsRecord {
             record_type: ContentType::Handshake,
+            content_type: ContentType::Handshake,
             legacy_version: 0x0303,
             fragment: &fragment,
         };
@@ -162,6 +187,7 @@ mod tests {
         let large_fragment = vec![0; 11];
         let record = TlsRecord {
             record_type: ContentType::Handshake,
+            content_type: ContentType::Handshake,
             legacy_version: 0x0303,
             fragment: &large_fragment,
         };
@@ -180,5 +206,31 @@ mod tests {
         
         let record_layer = RecordLayer::new();
         assert!(record_layer.parse_record(&record_data).is_err());
+    }
+    
+    #[test]
+    fn test_process_multiple_records() {
+        let record_data = [
+            // Record 1: Handshake
+            22, // Handshake record type
+            0x03, 0x03, // TLS 1.2 legacy version
+            0x00, 0x05, // Length 5
+            0x01, 0x02, 0x03, 0x04, 0x05, // Fragment data
+            
+            // Record 2: Alert
+            21, // Alert record type
+            0x03, 0x03, // TLS 1.2 legacy version
+            0x00, 0x02, // Length 2
+            0x01, 0x02, // Fragment data
+        ];
+        
+        let record_layer = RecordLayer::new();
+        let records = record_layer.process_records(&record_data).unwrap();
+        
+        assert_eq!(records.len(), 2);
+        assert_eq!(records[0].record_type, ContentType::Handshake);
+        assert_eq!(records[0].fragment.len(), 5);
+        assert_eq!(records[1].record_type, ContentType::Alert);
+        assert_eq!(records[1].fragment.len(), 2);
     }
 }

@@ -48,7 +48,12 @@ impl CertificateVerify {
         Ok(Self { algorithm, signature })
     }
     
-    pub fn verify(&self, transcript_hash: &[u8], public_key: &[u8], is_server: bool) -> Result<()> {
+    pub fn verify(&self, transcript_hash: &[u8], public_key: &[u8]) -> Result<()> {
+        // In TLS 1.3, the context string is different for client and server
+        // Since this is the server certificate verify message in our case (in client mode), 
+        // we'll use the server context string
+        let is_server = true;
+        
         crate::crypto::signature::verify_certificate_verify(
             self.algorithm,
             public_key,
@@ -75,6 +80,10 @@ impl HandshakeMessage for CertificateVerify {
         result.extend_from_slice(&self.signature);
         
         Ok(result)
+    }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 

@@ -55,4 +55,12 @@ impl StateHandler for ServerState {
     fn get_selected_cipher_suite(&self) -> Option<CipherSuite> {
         self.selected_cipher_suite
     }
+    
+    fn get_server_name(&self) -> Option<&str> {
+        None // Server doesn't have a server name
+    }
+    
+    fn get_certificate_verifier(&self) -> Option<&crate::certificate::CertificateVerifier> {
+        None // Server doesn't do certificate verification
+    }
 }

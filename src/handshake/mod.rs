@@ -64,6 +64,9 @@ impl TryFrom<u8> for HandshakeType {
 pub trait HandshakeMessage: Debug {
     fn message_type(&self) -> HandshakeType;
     fn serialize(&self) -> Result<Vec<u8>>;
+    
+    // Allow downcasting for specific message types
+    fn as_any(&self) -> &dyn std::any::Any;
 }
 
 #[derive(Debug)]

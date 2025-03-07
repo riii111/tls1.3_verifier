@@ -54,4 +54,8 @@ impl HandshakeMessage for EncryptedExtensions {
         
         Ok(result)
     }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }

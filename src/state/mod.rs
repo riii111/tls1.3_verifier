@@ -26,6 +26,8 @@ pub trait StateHandler {
     fn get_state(&self) -> ConnectionState;
     fn is_handshake_complete(&self) -> bool;
     fn get_selected_cipher_suite(&self) -> Option<CipherSuite>;
+    fn get_server_name(&self) -> Option<&str>;
+    fn get_certificate_verifier(&self) -> Option<&crate::certificate::CertificateVerifier>;
 }
 
 pub struct HandshakeState {
@@ -40,6 +42,25 @@ impl HandshakeState {
             role: ConnectionRole::Client,
             state: ConnectionState::Initial,
             handler: Box::new(client::ClientState::new()),
+        }
+    }
+    
+    pub fn new_client_with_certificate_verifier(
+        verifier: crate::certificate::CertificateVerifier,
+        server_name: Option<String>,
+    ) -> Self {
+        let mut client_state = client::ClientState::new();
+        
+        if let Some(name) = server_name {
+            client_state = client_state.with_server_name(name);
+        }
+        
+        client_state = client_state.with_certificate_verifier(verifier);
+        
+        Self {
+            role: ConnectionRole::Client,
+            state: ConnectionState::Initial,
+            handler: Box::new(client_state),
         }
     }
     
@@ -71,5 +92,13 @@ impl HandshakeState {
     
     pub fn get_selected_cipher_suite(&self) -> Option<CipherSuite> {
         self.handler.get_selected_cipher_suite()
+    }
+    
+    pub fn get_server_name(&self) -> Option<&str> {
+        self.handler.get_server_name()
+    }
+    
+    pub fn get_certificate_verifier(&self) -> Option<&crate::certificate::CertificateVerifier> {
+        self.handler.get_certificate_verifier()
     }
 }
